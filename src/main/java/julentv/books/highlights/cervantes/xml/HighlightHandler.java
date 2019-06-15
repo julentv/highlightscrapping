@@ -14,11 +14,13 @@ public class HighlightHandler extends DefaultHandler {
     private static final String TYPE_PREFIX = "Type: ";
     private static final String HIGHLIGHT_TYPE = "HIGHLIGHT";
     private static final String TEXT_PREFIX = "Text: ";
+    public static final String CHAPTER_PREFIX = "Chapter: ";
     private StringBuilder data = null;
 
     private final List<Highlight> highlights = new ArrayList<>();
     private boolean isHighlight;
     private String content;
+    private String chapter;
 
     public List<Highlight> getHighlights() {
         return highlights;
@@ -41,6 +43,8 @@ public class HighlightHandler extends DefaultHandler {
                 }
             } else if (value.startsWith(TEXT_PREFIX)) {
                 content = value.replace(TEXT_PREFIX, "");
+            } else if (value.startsWith(CHAPTER_PREFIX)) {
+                chapter = value.replace(CHAPTER_PREFIX, "");
             }
 
         } else if (qName.equalsIgnoreCase("div")) {
@@ -60,7 +64,7 @@ public class HighlightHandler extends DefaultHandler {
         return new Highlight(Stream.of(content.split("\n"))
                 .map(String::trim)
                 .filter(StringUtils::isNotEmpty)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList()), chapter);
     }
 
     private void restartState() {

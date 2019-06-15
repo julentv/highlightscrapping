@@ -31,6 +31,10 @@ public class CervantesXmlHighlightExtractorTest {
         Assert.assertEquals(2, highlights.size());
         Assert.assertEquals(FIRST_HIGHLIGHT, highlights.get(0).toString());
         Assert.assertEquals(SECOND_HIGHLIGHT, highlights.get(1).toString());
+
+        Assert.assertEquals("I. Mexicanos perdidos en México (1975)", highlights.get(0).getChapter());
+        Assert.assertEquals("II. Otro", highlights.get(1).getChapter());
+
     }
 
     private String getFileFolder(URL fileUrl) {

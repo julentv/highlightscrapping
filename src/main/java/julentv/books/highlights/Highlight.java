@@ -4,13 +4,19 @@ import java.util.List;
 
 public class Highlight {
     private final List<String> lines;
+    private final String chapter;
 
-    public Highlight(List<String> lines) {
+    public Highlight(List<String> lines, String chapter) {
         this.lines = lines;
+        this.chapter = chapter;
     }
 
     public List<String> getLines() {
         return lines;
+    }
+
+    public String getChapter() {
+        return chapter;
     }
 
     @Override
