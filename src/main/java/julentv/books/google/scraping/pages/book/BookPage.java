@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public class BookPage {
     private final WebDriver driver;
     private boolean inited;
+    private String currentChapter = "";
 
     public BookPage(WebDriver driver) {
         this.driver = driver;
@@ -29,6 +30,7 @@ public class BookPage {
 
     public void highlight(Highlight textToHighlight) throws InterruptedException {
         initState();
+        goToChapter(textToHighlight.getChapter());
         Page page = getPage();
         while (!page.contains(textToHighlight.getLines().get(0))) {
             goToNextPage();
@@ -36,6 +38,18 @@ public class BookPage {
         }
         System.out.println("found!");
         highlight(textToHighlight.getLines().get(0), page);
+    }
+
+    private void goToChapter(String chapterName) throws InterruptedException {
+        if (!currentChapter.equals(chapterName)) {
+            driver.findElement(By.className("gb-sidebar-button-content")).click();
+            driver.findElements(By.className("gb-result-snippet")).stream()
+                    .filter(element -> chapterName.equals(element.getText()))
+                    .findFirst().ifPresent(WebElement::click);
+            driver.findElement(By.className("gb-sidepanel-close")).click();
+            currentChapter = chapterName;
+            Thread.sleep(1000);
+        }
     }
 
     private void goToNextPage() {

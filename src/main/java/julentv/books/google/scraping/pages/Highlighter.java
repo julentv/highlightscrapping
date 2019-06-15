@@ -27,7 +27,7 @@ public class Highlighter {
 
     private BookPage openBook(WebDriver driver, String googleBookId) throws InterruptedException {
         driver.get("https://play.google.com/books/reader?id=" + googleBookId + "&pg=GBS.PA1");
-        Thread.sleep(1500);
+        Thread.sleep(2000);
         return PageFactory.initElements(driver, BookPage.class);
     }
 
