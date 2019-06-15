@@ -1,13 +1,16 @@
 package julentv.books.google.scraping.pages.book;
 
+import julentv.books.google.scraping.model.HighlightElements;
+import julentv.books.google.scraping.model.Page;
+import julentv.books.google.scraping.model.Word;
+import julentv.books.highlights.Highlight;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
-import java.awt.*;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class BookPage {
     private final WebDriver driver;
@@ -20,14 +23,19 @@ public class BookPage {
     private void initState() {
         if (!inited) {
             driver.switchTo().frame(0);
+            inited = true;
         }
     }
 
-    public void move() throws InterruptedException {
+    public void highlight(Highlight textToHighlight) throws InterruptedException {
         initState();
-        goToNextPage();
-        Thread.sleep(1500);
-        highlight();
+        Page page = getPage();
+        while (!page.contains(textToHighlight.getLines().get(0))) {
+            goToNextPage();
+            page = getPage();
+        }
+        System.out.println("found!");
+        highlight(textToHighlight.getLines().get(0), page);
     }
 
     private void goToNextPage() {
@@ -35,15 +43,24 @@ public class BookPage {
         nextPageButton.click();
     }
 
-    private void highlight() {
+    private Page getPage() throws InterruptedException {
         List<WebElement> words = driver.findElements(By.tagName("gbt"));
-        Optional<WebElement> wordSi = words.stream().filter(word -> word.getText() != null && "Si".equals(word.getText())).findFirst();
-        Optional<WebElement> wordVentas = words.stream().filter(word -> word.getText() != null && "ventas".equals(word.getText())).findFirst();
+        int retries = 0;
+        while (words.isEmpty() && retries < 10) {
+            Thread.sleep(100);
+            words = driver.findElements(By.tagName("gbt"));
+            retries++;
+        }
+        return new Page(words.stream().map(Word::new).collect(Collectors.toList()));
+    }
+
+    private void highlight(String textToHighlight, Page page) {
+        HighlightElements highlightElements = page.getHighlightElements(textToHighlight);
 
         Actions builder = new Actions(driver);
-        builder.moveToElement(wordSi.get())
+        builder.moveToElement(highlightElements.getStartElement().getWebElement())
                 .clickAndHold()
-                .moveToElement(wordVentas.get())
+                .moveToElement(highlightElements.getEndElement().getWebElement())
                 .release()
                 .build().perform();
 

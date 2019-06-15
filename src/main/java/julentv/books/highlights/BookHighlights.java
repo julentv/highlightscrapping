@@ -3,22 +3,16 @@ package julentv.books.highlights;
 import java.util.List;
 
 public class BookHighlights {
-    private final String title;
-    private final String author;
+    private final BookMetadata metadata;
     private final List<Highlight> highlights;
 
     private BookHighlights(BookHighlightsBuilder builder) {
-        this.title = builder.getTitle();
-        this.author = builder.getAuthor();
+        this.metadata = builder.getMetadata();
         this.highlights = builder.getHighlights();
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public String getAuthor() {
-        return author;
+    public BookMetadata getMetadata() {
+        return metadata;
     }
 
     public List<Highlight> getHighlights() {
@@ -26,17 +20,11 @@ public class BookHighlights {
     }
 
     public static class BookHighlightsBuilder {
-        private String title;
-        private String author;
+        private BookMetadata metadata;
         private List<Highlight> highlights;
 
-        public BookHighlightsBuilder title(String bookName) {
-            this.title = bookName;
-            return this;
-        }
-
-        public BookHighlightsBuilder author(String author) {
-            this.author = author;
+        public BookHighlightsBuilder metadata(BookMetadata metadata) {
+            this.metadata = metadata;
             return this;
         }
 
@@ -45,12 +33,8 @@ public class BookHighlights {
             return this;
         }
 
-        public String getTitle() {
-            return title;
-        }
-
-        public String getAuthor() {
-            return author;
+        public BookMetadata getMetadata() {
+            return metadata;
         }
 
         public List<Highlight> getHighlights() {

@@ -15,7 +15,7 @@ public class CervantesXmlHighlightExtractor {
         try {
             File file = new File(path + "/" + fileName);
             InputStream inputStream = new FileInputStream(file);
-            Reader reader = new InputStreamReader(inputStream, StandardCharsets.ISO_8859_1);
+            Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
 
             InputSource is = new InputSource(reader);
             is.setEncoding("UTF-8");
