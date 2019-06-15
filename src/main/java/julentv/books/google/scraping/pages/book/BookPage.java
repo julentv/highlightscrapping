@@ -23,7 +23,7 @@ public class BookPage {
         }
     }
 
-    public void move() throws InterruptedException, AWTException {
+    public void move() throws InterruptedException {
         initState();
         goToNextPage();
         Thread.sleep(1500);
