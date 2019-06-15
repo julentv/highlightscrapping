@@ -22,7 +22,7 @@ public class Highlighter {
         WebDriver driver = new FirefoxDriver();   //print results
         logIn(driver);
         BookPage bookPage = openBook(driver, googleBookId);
-        bookPage.highlight(highlights.getHighlights().get(1));
+        bookPage.highlight(highlights);
     }
 
     private BookPage openBook(WebDriver driver, String googleBookId) throws InterruptedException {

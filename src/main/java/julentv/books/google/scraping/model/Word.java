@@ -8,7 +8,7 @@ public class Word {
 
     public Word(WebElement webElement) {
         this.webElement = webElement;
-        this.text = webElement.getText();
+        this.text = webElement.getText().replaceAll("[^a-zA-Z0-9 ]", "");
     }
 
     public String getText() {

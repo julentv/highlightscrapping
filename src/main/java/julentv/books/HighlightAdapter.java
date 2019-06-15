@@ -25,6 +25,6 @@ public class HighlightAdapter {
         BookHighlights highlights = highlightExtractor.getHighlights(fileName, filePath);
         String googleBookId = idProvider.getIdFromTitle(highlights.getMetadata().getTitle());
         System.out.println("book with title: " + highlights.getMetadata().getTitle() + ", and google id: " + googleBookId);
-        highlighter.performHighlights(googleBookId,highlights);
+        highlighter.performHighlights(googleBookId, highlights);
     }
 }

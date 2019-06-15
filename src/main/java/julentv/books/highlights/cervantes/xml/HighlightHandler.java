@@ -63,6 +63,7 @@ public class HighlightHandler extends DefaultHandler {
     private Highlight createHighlightFromText(String content) {
         return new Highlight(Stream.of(content.split("\n"))
                 .map(String::trim)
+                .map(s -> s.replaceAll("[^a-zA-Z0-9 ]", ""))
                 .filter(StringUtils::isNotEmpty)
                 .collect(Collectors.toList()), chapter);
     }

@@ -3,6 +3,7 @@ package julentv.books.google.scraping.pages.book;
 import julentv.books.google.scraping.model.HighlightElements;
 import julentv.books.google.scraping.model.Page;
 import julentv.books.google.scraping.model.Word;
+import julentv.books.highlights.BookHighlights;
 import julentv.books.highlights.Highlight;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -10,6 +11,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class BookPage {
@@ -28,19 +30,50 @@ public class BookPage {
         }
     }
 
-    public void highlight(Highlight textToHighlight) throws InterruptedException {
+    public void highlight(BookHighlights bookHighlights) throws InterruptedException {
         initState();
-        goToChapter(textToHighlight.getChapter());
         Page page = getPage();
-        while (!page.contains(textToHighlight.getLines().get(0))) {
-            goToNextPage();
-            page = getPage();
+        Optional<Page> previousPage = Optional.empty();
+        for (Highlight textToHighlight : bookHighlights.getHighlights()) {
+            if (goToChapter(textToHighlight.getChapter())) {
+                page = getPage();
+                previousPage = Optional.empty();
+            }
+            String line = textToHighlight.getLines().stream().reduce((s1, s2) -> s1 + " " + s2).orElse("");
+            while (true) {
+                if (page.contains(textToHighlight.getLines().get(0))) {
+                    System.out.println("Adding note: " + line);
+                    highlight(page.getHighlightElements(line));
+                    break;
+                } else {
+                    String twoPages = previousPage.map(Page::getPageText).orElse("") + " " + page.getPageText();
+                    if (twoPages.contains(line)) {
+                        System.out.println("Adding note: " + line);
+                        highlightInTwoPages(textToHighlight, page);
+                        break;
+                    }
+                }
+                goToNextPage();
+                previousPage = Optional.of(page);
+                page = getPage();
+            }
         }
-        System.out.println("found!");
-        highlight(textToHighlight.getLines().get(0), page);
     }
 
-    private void goToChapter(String chapterName) throws InterruptedException {
+    private void highlightInTwoPages(Highlight textToHighlight, Page page) throws InterruptedException {
+        String[] words = textToHighlight.getLines().get(0).split(" ");
+
+        int numberOfWordsInCurrentPage = page.getBeginningMatchingWords(words);
+        int numberOfWordsInPreviousPage = words.length - numberOfWordsInCurrentPage;
+        highlight(new HighlightElements(page.getWords().get(0), page.getWords().get(numberOfWordsInCurrentPage - 1)));
+        goToPreviousPage();
+        Page previousPage = getPage();
+        highlight(new HighlightElements(previousPage.getWords().get(previousPage.getWords().size() - 1),
+                previousPage.getWords().get(previousPage.getWords().size() - numberOfWordsInPreviousPage - 1)));
+        goToNextPage();
+    }
+
+    private boolean goToChapter(String chapterName) throws InterruptedException {
         if (!currentChapter.equals(chapterName)) {
             driver.findElement(By.className("gb-sidebar-button-content")).click();
             driver.findElements(By.className("gb-result-snippet")).stream()
@@ -49,7 +82,9 @@ public class BookPage {
             driver.findElement(By.className("gb-sidepanel-close")).click();
             currentChapter = chapterName;
             Thread.sleep(1000);
+            return true;
         }
+        return false;
     }
 
     private void goToNextPage() {
@@ -57,20 +92,27 @@ public class BookPage {
         nextPageButton.click();
     }
 
-    private Page getPage() throws InterruptedException {
-        List<WebElement> words = driver.findElements(By.tagName("gbt"));
-        int retries = 0;
-        while (words.isEmpty() && retries < 10) {
-            Thread.sleep(100);
-            words = driver.findElements(By.tagName("gbt"));
-            retries++;
-        }
-        return new Page(words.stream().map(Word::new).collect(Collectors.toList()));
+    private void goToPreviousPage() {
+        WebElement nextPageButton = driver.findElements(By.className("gb-pagination-controls-left")).get(0);
+        nextPageButton.click();
     }
 
-    private void highlight(String textToHighlight, Page page) {
-        HighlightElements highlightElements = page.getHighlightElements(textToHighlight);
+    private Page getPage() throws InterruptedException {
+        try {
+            List<WebElement> words = driver.findElements(By.tagName("gbt"));
+            int retries = 0;
+            while (words.isEmpty() && retries < 20) {
+                Thread.sleep(100);
+                words = driver.findElements(By.tagName("gbt"));
+                retries++;
+            }
+            return new Page(words.parallelStream().map(Word::new).collect(Collectors.toList()));
+        } catch (Exception e) {
+            throw new PageParsingException(e);
+        }
+    }
 
+    private void highlight(HighlightElements highlightElements) throws InterruptedException {
         Actions builder = new Actions(driver);
         builder.moveToElement(highlightElements.getStartElement().getWebElement())
                 .clickAndHold()
@@ -78,6 +120,7 @@ public class BookPage {
                 .release()
                 .build().perform();
 
+        Thread.sleep(500);
         driver.findElement(By.className("gb-selection-menu-highlight")).click();
     }
 }

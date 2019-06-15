@@ -37,6 +37,24 @@ public class Page {
         return this.pageText.contains(text);
     }
 
+    public int getBeginningMatchingWords(String[] words) {
+        int numberOfWords = 0;
+
+        for (int i = 0; i < words.length && i < this.words.size(); i++) {
+            boolean matches = true;
+            for (int j = i; j >= 0; j--) {
+                if (!words[words.length - 1 - (i - j)].equals(this.words.get(j).getText())) {
+                    matches = false;
+                    break;
+                }
+            }
+            if (matches) {
+                numberOfWords = i + 1;
+            }
+        }
+        return numberOfWords;
+    }
+
     public HighlightElements getHighlightElements(String textToHighlight) {
         String[] wordsToHighlight = textToHighlight.split(" ");
         int firstElement = 0;
