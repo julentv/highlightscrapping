@@ -7,7 +7,8 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.PageFactory;
 
 public class Highlighter {
-    private static final String DRIVER = "D:\\dev\\workspace\\highlightsscrapping\\lib\\geckodriver.exe";
+    private static final String DRIVER = "D:\\dev\\workspace\\highlightscrapping\\lib\\geckodriver.exe";
+    private static final String INITIAL_PAGE = "0";
 
     private final String user;
     private final String password;
@@ -22,11 +23,11 @@ public class Highlighter {
         WebDriver driver = new FirefoxDriver();   //print results
         logIn(driver);
         BookPage bookPage = openBook(driver, googleBookId);
-        bookPage.highlight(highlights);
+        bookPage.highlight(highlights, !"0".equals(INITIAL_PAGE));
     }
 
     private BookPage openBook(WebDriver driver, String googleBookId) throws InterruptedException {
-        driver.get("https://play.google.com/books/reader?id=" + googleBookId + "&pg=GBS.PA1");
+        driver.get("https://play.google.com/books/reader?id=" + googleBookId + "&pg=GBS.PA"+ INITIAL_PAGE);
         Thread.sleep(2000);
         return PageFactory.initElements(driver, BookPage.class);
     }

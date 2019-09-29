@@ -30,18 +30,22 @@ public class BookPage {
         }
     }
 
-    public void highlight(BookHighlights bookHighlights) throws InterruptedException {
+    public void highlight(BookHighlights bookHighlights, boolean startOnPage) throws InterruptedException {
+        boolean startOnPageFirst = startOnPage;
         initState();
-        Page page = getPage();
         Optional<Page> previousPage = Optional.empty();
         for (Highlight textToHighlight : bookHighlights.getHighlights()) {
+            if (startOnPageFirst) {
+                currentChapter = textToHighlight.getChapter();
+                startOnPageFirst = false;
+            }
             if (goToChapter(textToHighlight.getChapter())) {
-                page = getPage();
                 previousPage = Optional.empty();
             }
-            String line = textToHighlight.getLines().stream().reduce((s1, s2) -> s1 + " " + s2).orElse("");
+            Page page = getPageWithRetry();
+            String line = textToHighlight.joinedLines();
             while (true) {
-                if (page.contains(textToHighlight.getLines().get(0))) {
+                if (page.contains(line)) {
                     System.out.println("Adding note: " + line);
                     highlight(page.getHighlightElements(line));
                     break;
@@ -55,19 +59,19 @@ public class BookPage {
                 }
                 goToNextPage();
                 previousPage = Optional.of(page);
-                page = getPage();
+                page = getPageWithRetry();
             }
         }
     }
 
     private void highlightInTwoPages(Highlight textToHighlight, Page page) throws InterruptedException {
-        String[] words = textToHighlight.getLines().get(0).split(" ");
+        String[] words = textToHighlight.joinedLines().split(" ");
 
         int numberOfWordsInCurrentPage = page.getBeginningMatchingWords(words);
         int numberOfWordsInPreviousPage = words.length - numberOfWordsInCurrentPage;
         highlight(new HighlightElements(page.getWords().get(0), page.getWords().get(numberOfWordsInCurrentPage - 1)));
         goToPreviousPage();
-        Page previousPage = getPage();
+        Page previousPage = getPageWithRetry();
         highlight(new HighlightElements(previousPage.getWords().get(previousPage.getWords().size() - 1),
                 previousPage.getWords().get(previousPage.getWords().size() - numberOfWordsInPreviousPage - 1)));
         goToNextPage();
@@ -97,7 +101,17 @@ public class BookPage {
         nextPageButton.click();
     }
 
-    private Page getPage() throws InterruptedException {
+    private Page getPageWithRetry() throws InterruptedException {
+        try {
+            return getPage();
+        } catch (PageParsingException ppe) {
+            System.out.println("Retrying page getting.........");
+            Thread.sleep(1000);
+            return getPage();
+        }
+    }
+
+    private Page getPage() {
         try {
             List<WebElement> words = driver.findElements(By.tagName("gbt"));
             int retries = 0;
@@ -113,13 +127,25 @@ public class BookPage {
     }
 
     private void highlight(HighlightElements highlightElements) throws InterruptedException {
-        Actions builder = new Actions(driver);
-        builder.moveToElement(highlightElements.getStartElement().getWebElement())
-                .clickAndHold()
-                .moveToElement(highlightElements.getEndElement().getWebElement())
-                .release()
-                .build().perform();
+        try {
+            singleHighlitgh(highlightElements);
+        } catch (Exception e) {
+            System.out.println("Retrying highlight ...");
+            Actions builder = new Actions(driver);
+            builder.release().build().perform();
+            singleHighlitgh(highlightElements);
+        }
+    }
 
+    private void singleHighlitgh(HighlightElements highlightElements) throws InterruptedException {
+        Actions builder = new Actions(driver);
+        Actions action = builder.moveToElement(highlightElements.getStartElement().getWebElement())
+                .clickAndHold();
+        Thread.sleep(100);
+        action.moveToElement(highlightElements.getEndElement().getWebElement())
+                .release()
+                .build()
+                .perform();
         Thread.sleep(500);
         driver.findElement(By.className("gb-selection-menu-highlight")).click();
     }
