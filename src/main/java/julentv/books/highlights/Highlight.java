@@ -15,6 +15,10 @@ public class Highlight {
         return lines;
     }
 
+    public String joinedLines() {
+        return lines.stream().reduce((s1, s2) -> s1 + " " + s2).orElse("");
+    }
+
     public String getChapter() {
         return chapter;
     }
