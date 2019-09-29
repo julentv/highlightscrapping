@@ -70,11 +70,16 @@ public class Page {
     }
 
     private boolean matchesFrom(String[] wordsToHighlight, int startPossition) {
-        for (int j = 1; j < wordsToHighlight.length; j++) {
-            if (!wordsToHighlight[j].contains(this.getWords().get(startPossition + j).getText())) {
-                return false;
+        try {
+            for (int j = 1; j < wordsToHighlight.length; j++) {
+                if (!wordsToHighlight[j].contains(this.getWords().get(startPossition + j).getText())) {
+                    return false;
+                }
             }
+            return true;
+        } catch (IndexOutOfBoundsException iobe) {
+            System.out.println("Failed page: " + this.getWords().stream().map(Word::getText).reduce((s1, s2) -> s1 + " " + s2));
+            throw iobe;
         }
-        return true;
     }
 }
